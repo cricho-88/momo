@@ -1,0 +1,1436 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Momo — Nunca vuelvas a perder una skin en oferta</title>
+<meta name="description" content="Momo revisa automáticamente la tienda semanal de League of Legends y te avisa únicamente cuando encuentra una skin de tu wishlist.">
+
+<!-- ==========================================================
+     FUENTES
+     Sora   -> display / titulares (uso restringido, con peso)
+     Inter  -> texto de cuerpo, UI, navegación
+     IBM Plex Mono -> etiquetas, eyebrows, datos, "voz de sistema"
+========================================================== -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+/* ==========================================================
+   TOKENS
+   Sistema de color y tipografía derivado de la app Momo.
+========================================================== */
+:root{
+  --bg:            #000000;
+  --bg-secondary:  #050505;
+  --card:          #0B0B0B;
+  --card-hover:    #0E0E0E;
+  --border:        #1A1A1A;
+  --border-hover:  rgba(30,144,255,0.35);
+  --blue:          #1E90FF;
+  --blue-2:        #2768FF;
+  --blue-glow:     rgba(30,144,255,0.18);
+  --text:          #F2E6D0;
+  --text-secondary:#A0A0A0;
+  --text-tertiary: #5C5C5C;
+
+  --font-display: 'Sora', 'Inter', sans-serif;
+  --font-body:    'Inter', sans-serif;
+  --font-mono:    'IBM Plex Mono', monospace;
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+
+  --ease: cubic-bezier(.16,.8,.24,1);
+}
+
+/* ==========================================================
+   RESET
+========================================================== */
+*,*::before,*::after{ box-sizing: border-box; margin:0; padding:0; }
+html{ scroll-behavior: smooth; }
+html,body{ background: var(--bg); }
+body{
+  font-family: var(--font-body);
+  color: var(--text);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+img,svg{ display:block; max-width:100%; }
+a{ color:inherit; text-decoration:none; }
+ul{ list-style:none; }
+button{ font-family:inherit; cursor:pointer; border:none; background:none; color:inherit; }
+h1,h2,h3,h4{ font-family: var(--font-display); font-weight:600; letter-spacing:-0.02em; color:var(--text); }
+
+:focus-visible{
+  outline: 2px solid var(--blue);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ==========================================================
+   UTILIDADES
+========================================================== */
+.wrap{
+  width: 100%;
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+.eyebrow{
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--blue);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.eyebrow::before{
+  content:"";
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--blue);
+  box-shadow: 0 0 0 4px var(--blue-glow);
+}
+.section-head{
+  max-width: 620px;
+  margin-bottom: 56px;
+}
+.section-head h2{
+  font-size: clamp(28px, 3.4vw, 38px);
+  margin-top: 14px;
+  line-height: 1.15;
+}
+.section-head p{
+  margin-top: 16px;
+  color: var(--text-secondary);
+  font-size: 16.5px;
+  max-width: 540px;
+}
+section{
+  padding: 120px 0;
+  position: relative;
+}
+.divider{
+  height: 1px;
+  background: var(--border);
+  width: 100%;
+}
+
+/* reveal-on-scroll */
+.reveal{
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity .7s var(--ease), transform .7s var(--ease);
+}
+.reveal.is-visible{
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* botones */
+.btn{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 15px;
+  padding: 14px 24px;
+  border-radius: var(--radius-sm);
+  transition: transform .25s var(--ease), box-shadow .25s var(--ease), background .25s var(--ease), border-color .25s var(--ease);
+  white-space: nowrap;
+}
+.btn-primary{
+  background: linear-gradient(180deg, var(--blue), var(--blue-2));
+  color: #04101E;
+  box-shadow: 0 0 0 1px rgba(30,144,255,.4), 0 8px 24px -8px rgba(30,144,255,.55);
+}
+.btn-primary:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 1px rgba(30,144,255,.6), 0 14px 30px -8px rgba(30,144,255,.7);
+}
+.btn-primary svg{ width:18px; height:18px; }
+.btn-ghost{
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover{
+  border-color: var(--border-hover);
+  background: rgba(30,144,255,0.05);
+}
+.btn-block{ width:100%; }
+.btn-lg{ padding: 17px 34px; font-size: 16px; }
+
+/* ==========================================================
+   NAV
+========================================================== */
+.nav{
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  background: rgba(0,0,0,0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid transparent;
+  transition: border-color .3s var(--ease), background .3s var(--ease);
+}
+.nav.scrolled{
+  border-bottom-color: var(--border);
+}
+.nav-inner{
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.brand{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: -0.01em;
+}
+.brand-mark{
+  width: 26px; height: 26px;
+  border-radius: 8px;
+  background: linear-gradient(145deg, var(--blue), var(--blue-2));
+  position: relative;
+  box-shadow: 0 0 0 1px rgba(30,144,255,.5), 0 6px 16px -6px rgba(30,144,255,.6);
+}
+.brand-mark::after{
+  content:"";
+  position:absolute; inset: 7px;
+  border-radius: 3px;
+  background: #04101E;
+}
+.nav-links{
+  display: flex;
+  align-items: center;
+  gap: 36px;
+  font-size: 14.5px;
+  color: var(--text-secondary);
+}
+.nav-links a{ transition: color .2s var(--ease); position:relative; }
+.nav-links a:hover{ color: var(--text); }
+.nav-cta{ display:flex; align-items:center; gap:18px; }
+.nav .btn{ padding: 10px 18px; font-size: 14px; }
+
+.nav-toggle{ display:none; }
+
+/* ==========================================================
+   HERO
+========================================================== */
+.hero{
+  padding: 200px 0 140px;
+  position: relative;
+}
+.hero::before{
+  content:"";
+  position: absolute;
+  top: -120px; left: 50%;
+  width: 900px; height: 500px;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse at center, rgba(30,144,255,0.10), transparent 70%);
+  pointer-events: none;
+}
+.hero-grid{
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 64px;
+  align-items: center;
+  position: relative;
+}
+.hero-copy h1{
+  font-size: clamp(38px, 5vw, 58px);
+  line-height: 1.08;
+  margin-top: 18px;
+  max-width: 560px;
+}
+.hero-copy .accent{
+  background: linear-gradient(100deg, var(--text) 40%, var(--blue) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.hero-copy p.lead{
+  margin-top: 22px;
+  font-size: 17.5px;
+  color: var(--text-secondary);
+  max-width: 480px;
+}
+.hero-actions{
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 36px;
+  flex-wrap: wrap;
+}
+.hero-meta{
+  margin-top: 28px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  color: var(--text-tertiary);
+}
+.hero-meta span{ display:flex; align-items:center; gap:7px; }
+.hero-meta svg{ width:14px; height:14px; color: var(--text-tertiary); }
+
+/* --------- Signature element: Momo status widget --------- */
+.widget{
+  background: linear-gradient(180deg, var(--card), #060606);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 30px 80px -30px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.02);
+  transform: perspective(1400px) rotateY(-6deg) rotateX(2deg);
+  transition: transform .6s var(--ease);
+}
+.widget:hover{
+  transform: perspective(1400px) rotateY(-2deg) rotateX(1deg);
+}
+.widget-titlebar{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255,255,255,0.015);
+}
+.widget-titlebar .win-title{
+  display:flex; align-items:center; gap:9px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.win-dot{
+  width:7px; height:7px; border-radius:50%;
+  background: var(--blue);
+  box-shadow: 0 0 8px var(--blue);
+}
+.win-controls{ display:flex; align-items:center; gap:14px; opacity:.55; }
+.win-controls span{
+  display:block; width:11px; height:11px;
+  border: 1px solid var(--text-tertiary);
+}
+.win-controls .win-min{ border:none; border-bottom:1px solid var(--text-tertiary); width:10px; height:1px; align-self:center; }
+.win-controls .win-close{ position:relative; border:none; }
+.win-controls .win-close::before,.win-controls .win-close::after{
+  content:""; position:absolute; top:5px; left:0; width:11px; height:1px; background: var(--text-tertiary);
+}
+.win-controls .win-close::before{ transform: rotate(45deg); }
+.win-controls .win-close::after{ transform: rotate(-45deg); }
+
+.widget-body{ padding: 22px; }
+.widget-label{
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  margin-bottom: 14px;
+}
+.champ-row{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  margin-bottom: 10px;
+  background: rgba(255,255,255,0.012);
+  transition: border-color .4s var(--ease), background .4s var(--ease);
+}
+.champ-row .champ-left{ display:flex; align-items:center; gap:12px; }
+.champ-avatar{
+  width: 34px; height:34px;
+  border-radius: 9px;
+  background: linear-gradient(150deg, #141414, #0a0a0a);
+  border: 1px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+.champ-name{ font-size: 14px; font-weight: 500; }
+.champ-sub{ font-size: 11.5px; color: var(--text-tertiary); font-family: var(--font-mono); }
+.stars{ display:flex; gap:3px; }
+.stars svg{ width:12px; height:12px; color: var(--text-tertiary); transition: color .3s; }
+.stars svg.on{ color: var(--blue); }
+
+.champ-row.hit{
+  border-color: var(--border-hover);
+  background: rgba(30,144,255,0.06);
+}
+.champ-row.hit .champ-avatar{ border-color: rgba(30,144,255,.5); box-shadow: 0 0 14px rgba(30,144,255,.25); }
+
+.widget-status{
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 14px;
+  border-radius: var(--radius-sm);
+  background: #060606;
+  border: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--text-secondary);
+}
+.status-dot{
+  width: 8px; height:8px; border-radius:50%;
+  background: var(--text-tertiary);
+  flex-shrink:0;
+  transition: background .4s var(--ease), box-shadow .4s var(--ease);
+}
+.status-dot.scanning{
+  background: var(--blue);
+  box-shadow: 0 0 10px rgba(30,144,255,.7);
+  animation: pulse 1.1s ease-in-out infinite;
+}
+.status-dot.found{
+  background: var(--blue);
+  box-shadow: 0 0 12px rgba(30,144,255,.9);
+}
+@keyframes pulse{
+  0%,100%{ opacity: 1; }
+  50%{ opacity: .35; }
+}
+
+/* ==========================================================
+   QUÉ ES MOMO
+========================================================== */
+.about-grid{
+  display: grid;
+  grid-template-columns: 0.85fr 1.15fr;
+  gap: 72px;
+  align-items: start;
+}
+.about-copy p{
+  color: var(--text-secondary);
+  font-size: 16.5px;
+  margin-bottom: 18px;
+  max-width: 480px;
+}
+.about-copy p:last-child{ margin-bottom:0; }
+.about-copy strong{ color: var(--text); font-weight: 600; }
+
+.silence-card{
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: var(--radius-lg);
+  padding: 30px;
+}
+.silence-card .silence-eyebrow{ margin-bottom: 18px; }
+.silence-line{
+  display:flex; align-items:flex-start; gap:12px;
+  padding: 14px 0;
+  border-top: 1px solid var(--border);
+}
+.silence-line:first-of-type{ border-top:none; padding-top:0; }
+.silence-line svg{ width:18px; height:18px; color: var(--blue); margin-top:2px; flex-shrink:0; }
+.silence-line span{ font-size: 14.5px; color: var(--text-secondary); }
+
+/* ==========================================================
+   CÓMO FUNCIONA
+========================================================== */
+.steps{
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+}
+.step{
+  position: relative;
+  padding: 0 24px 0 0;
+}
+.step:first-child{ padding-left: 0; }
+.step-num{
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--blue);
+  margin-bottom: 18px;
+  display:block;
+}
+.step-line{
+  position: absolute;
+  top: 8px; left: -12px; right: 24px;
+  height: 1px;
+  background: var(--border);
+}
+.step:first-child .step-line{ display:none; }
+.step h3{
+  font-size: 17px;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+.step p{
+  font-size: 14.5px;
+  color: var(--text-secondary);
+}
+.step-icon{
+  width: 40px; height:40px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  display:flex; align-items:center; justify-content:center;
+  margin-bottom: 18px;
+  transition: border-color .3s var(--ease), transform .3s var(--ease);
+}
+.step:hover .step-icon{ border-color: var(--border-hover); transform: translateY(-3px); }
+.step-icon svg{ width:19px; height:19px; color: var(--blue); }
+
+/* ==========================================================
+   CARACTERÍSTICAS
+========================================================== */
+.features-grid{
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.feature-card{
+  background: var(--card);
+  padding: 28px 24px;
+  transition: background .3s var(--ease);
+  position: relative;
+}
+.feature-card:hover{ background: var(--card-hover); }
+.feature-card:hover .feature-icon{ border-color: var(--border-hover); }
+.feature-icon{
+  width: 38px; height: 38px;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  margin-bottom: 18px;
+  transition: border-color .3s var(--ease);
+}
+.feature-icon svg{ width:18px; height:18px; color: var(--blue); }
+.feature-card h4{
+  font-size: 14.5px;
+  font-weight: 600;
+  margin-bottom: 7px;
+  color: var(--text);
+}
+.feature-card p{
+  font-size: 13.2px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* ==========================================================
+   CAPTURAS
+========================================================== */
+.shots-grid{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+}
+.shot-frame{
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--card);
+  overflow: hidden;
+  transition: border-color .3s var(--ease), transform .3s var(--ease);
+}
+.shot-frame:hover{ border-color: var(--border-hover); transform: translateY(-4px); }
+.shot-titlebar{
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 10px 13px;
+  border-bottom: 1px solid var(--border);
+}
+.shot-titlebar .win-title{ font-family:var(--font-mono); font-size:11px; color:var(--text-tertiary); }
+.shot-placeholder{
+  aspect-ratio: 16/10;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap: 10px;
+  background:
+    repeating-linear-gradient(135deg, rgba(255,255,255,0.012) 0 2px, transparent 2px 14px);
+}
+.shot-placeholder svg{ width:26px; height:26px; color: var(--text-tertiary); }
+.shot-placeholder span{
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+/* ==========================================================
+   FAQ
+========================================================== */
+.faq-list{
+  border-top: 1px solid var(--border);
+  max-width: 760px;
+}
+.faq-item{
+  border-bottom: 1px solid var(--border);
+}
+.faq-q{
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 24px 4px;
+  text-align: left;
+  font-family: var(--font-display);
+  font-size: 16.5px;
+  font-weight: 600;
+  color: var(--text);
+}
+.faq-q .plus{
+  width: 20px; height: 20px;
+  flex-shrink: 0;
+  position: relative;
+}
+.faq-q .plus::before,.faq-q .plus::after{
+  content:"";
+  position: absolute;
+  background: var(--blue);
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+}
+.faq-q .plus::before{ width: 14px; height: 1.5px; }
+.faq-q .plus::after{ width: 1.5px; height: 14px; transition: transform .3s var(--ease); }
+.faq-item.open .faq-q .plus::after{ transform: translate(-50%,-50%) rotate(90deg) scaleY(0); }
+
+.faq-a{
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .4s var(--ease);
+}
+.faq-a-inner{
+  padding: 0 4px 24px;
+  color: var(--text-secondary);
+  font-size: 15px;
+  max-width: 600px;
+}
+
+/* ==========================================================
+   DESCARGA
+========================================================== */
+.download-section{
+  padding: 110px 0;
+}
+.download-card{
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: radial-gradient(ellipse at 30% 0%, rgba(30,144,255,0.10), transparent 60%), var(--card);
+  padding: 72px 48px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.download-card::after{
+  content:"";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgba(30,144,255,0.08);
+  pointer-events: none;
+}
+.download-card h2{
+  font-size: clamp(28px, 4vw, 40px);
+  margin-top: 16px;
+}
+.download-card p{
+  margin: 16px auto 0;
+  color: var(--text-secondary);
+  font-size: 16px;
+  max-width: 460px;
+}
+.download-card .hero-actions{ justify-content: center; margin-top: 34px; }
+.download-note{
+  margin-top: 18px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+/* ==========================================================
+   SOBRE EL CREADOR
+========================================================== */
+.creator-card{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  padding: 36px 40px;
+  flex-wrap: wrap;
+}
+.creator-left{ display:flex; align-items:center; gap:20px; }
+.creator-avatar{
+  width: 54px; height: 54px;
+  border-radius: 14px;
+  background: linear-gradient(150deg, var(--blue), var(--blue-2));
+  display:flex; align-items:center; justify-content:center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 20px;
+  color: #04101E;
+  flex-shrink: 0;
+}
+.creator-text p{
+  font-size: 15px;
+  color: var(--text-secondary);
+  max-width: 420px;
+}
+.creator-text .creator-handle{
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--blue);
+  margin-bottom: 6px;
+  display:block;
+}
+
+/* ==========================================================
+   FOOTER
+========================================================== */
+footer{
+  border-top: 1px solid var(--border);
+  padding: 56px 0 36px;
+}
+.footer-top{
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 40px;
+  padding-bottom: 36px;
+}
+.footer-brand .brand{ margin-bottom: 12px; }
+.footer-brand p{
+  font-size: 13.5px;
+  color: var(--text-tertiary);
+  max-width: 260px;
+}
+.footer-links{
+  display: flex;
+  gap: 64px;
+  flex-wrap: wrap;
+}
+.footer-col h5{
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--text-tertiary);
+  margin-bottom: 16px;
+}
+.footer-col a{
+  display: block;
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 11px;
+  transition: color .2s var(--ease);
+}
+.footer-col a:hover{ color: var(--text); }
+.footer-bottom{
+  border-top: 1px solid var(--border);
+  padding-top: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.footer-bottom p{
+  font-size: 12.5px;
+  color: var(--text-tertiary);
+}
+.disclaimer{
+  max-width: 640px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--text-tertiary);
+}
+
+/* ==========================================================
+   RESPONSIVE
+========================================================== */
+@media (max-width: 1024px){
+  .wrap{ padding: 0 24px; }
+  .hero-grid{ grid-template-columns: 1fr; gap: 64px; }
+  .widget{ max-width: 480px; margin: 0 auto; transform:none; }
+  .about-grid{ grid-template-columns: 1fr; gap: 40px; }
+  .steps{ grid-template-columns: repeat(2, 1fr); row-gap: 48px; }
+  .step-line{ display:none; }
+  .features-grid{ grid-template-columns: repeat(2, 1fr); }
+  .shots-grid{ grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px){
+  section{ padding: 84px 0; }
+  .nav-links{
+    position: fixed;
+    top: 64px; left: 0; right: 0;
+    background: rgba(0,0,0,0.98);
+    border-bottom: 1px solid var(--border);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    padding: 8px 24px 20px;
+    transform: translateY(-8px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s var(--ease), transform .25s var(--ease);
+  }
+  .nav-links.open{ opacity:1; transform: translateY(0); pointer-events: auto; }
+  .nav-links a{ padding: 12px 0; width: 100%; border-bottom: 1px solid var(--border); }
+  .nav-cta .btn-ghost{ display:none; }
+  .nav-toggle{
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: 22px;
+  }
+  .nav-toggle span{ height:1.5px; background: var(--text); width:100%; transition: transform .25s, opacity .25s; }
+  .nav-toggle.open span:nth-child(1){ transform: translateY(6.5px) rotate(45deg); }
+  .nav-toggle.open span:nth-child(2){ opacity:0; }
+  .nav-toggle.open span:nth-child(3){ transform: translateY(-6.5px) rotate(-45deg); }
+
+  .hero{ padding: 150px 0 90px; }
+  .hero-actions .btn{ width:100%; }
+  .hero-actions{ flex-direction: column; align-items: stretch; }
+  .hero-meta{ flex-wrap: wrap; row-gap: 8px; }
+  .steps{ grid-template-columns: 1fr; }
+  .features-grid{ grid-template-columns: 1fr; }
+  .shots-grid{ grid-template-columns: 1fr; }
+  .creator-card{ flex-direction: column; align-items: flex-start; }
+  .footer-top{ flex-direction: column; }
+  .footer-links{ gap: 40px; }
+  .download-card{ padding: 52px 26px; }
+}
+
+@media (max-width: 420px){
+  .wrap{ padding: 0 18px; }
+  .champ-name{ font-size: 13px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ==========================================================
+     NAV
+========================================================== -->
+<nav class="nav" id="nav">
+  <div class="nav-inner">
+    <a href="#top" class="brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      Momo
+    </a>
+
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#como-funciona">Cómo funciona</a></li>
+      <li><a href="#caracteristicas">Características</a></li>
+      <li><a href="#capturas">Capturas</a></li>
+      <li><a href="#faq">Preguntas frecuentes</a></li>
+    </ul>
+
+    <div class="nav-cta">
+      <a href="Momo_Setup.exe" download class="btn btn-ghost">Descargar</a>
+      <button class="nav-toggle" id="navToggle" aria-label="Abrir menú" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ==========================================================
+     HERO
+========================================================== -->
+<header class="hero" id="top">
+  <div class="wrap hero-grid">
+    <div class="hero-copy reveal is-visible">
+      <span class="eyebrow">Para League of Legends · Windows</span>
+      <h1>Nunca vuelvas a perder <span class="accent">una skin en oferta.</span></h1>
+      <p class="lead">Momo revisa automáticamente la tienda semanal de League of Legends y te avisa únicamente cuando encuentra una skin de tu wishlist.</p>
+
+      <div class="hero-actions">
+        <a href="Momo_Setup.exe" download class="btn btn-primary btn-lg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v13m0 0l-5-5m5 5l5-5M4 20h16"/></svg>
+          Descargar para Windows
+        </a>
+        <a href="#caracteristicas" class="btn btn-ghost btn-lg">Ver características</a>
+      </div>
+
+      <div class="hero-meta">
+        <span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v-1M16 4v-1"/></svg>
+          Windows 10 / 11
+        </span>
+        <span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          Se cierra tras revisar
+        </span>
+        <span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0112 5a5.5 5.5 0 019.5 7c-2.5 4.5-9.5 9-9.5 9z"/></svg>
+          Totalmente gratuito
+        </span>
+      </div>
+    </div>
+
+    <!-- Elemento firma: widget de estado de Momo -->
+    <div class="hero-visual reveal is-visible">
+      <div class="widget" id="momoWidget">
+        <div class="widget-titlebar">
+          <div class="win-title"><span class="win-dot"></span> Momo — Estado</div>
+          <div class="win-controls"><span class="win-min"></span><span></span><span class="win-close"></span></div>
+        </div>
+        <div class="widget-body">
+          <div class="widget-label">Tu wishlist</div>
+
+          <div class="champ-row" id="row1">
+            <div class="champ-left">
+              <div class="champ-avatar">AH</div>
+              <div>
+                <div class="champ-name">Ahri</div>
+                <div class="champ-sub">Sin novedades</div>
+              </div>
+            </div>
+            <div class="stars">
+              <svg class="on" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.9L22 9.8l-5.5 4.8L18 22l-6-4-6 4 1.5-7.4L2 9.8l7.1-.9z"/></svg>
+              <svg class="on" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.9L22 9.8l-5.5 4.8L18 22l-6-4-6 4 1.5-7.4L2 9.8l7.1-.9z"/></svg>
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.9L22 9.8l-5.5 4.8L18 22l-6-4-6 4 1.5-7.4L2 9.8l7.1-.9z"/></svg>
+            </div>
+          </div>
+
+          <div class="champ-row" id="row2">
+            <div class="champ-left">
+              <div class="champ-avatar">JN</div>
+              <div>
+                <div class="champ-name">Jinx</div>
+                <div class="champ-sub" id="row2sub">Sin novedades</div>
+              </div>
+            </div>
+            <div class="stars">
+              <svg class="on" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.9L22 9.8l-5.5 4.8L18 22l-6-4-6 4 1.5-7.4L2 9.8l7.1-.9z"/></svg>
+              <svg class="on" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.9L22 9.8l-5.5 4.8L18 22l-6-4-6 4 1.5-7.4L2 9.8l7.1-.9z"/></svg>
+              <svg class="on" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.9L22 9.8l-5.5 4.8L18 22l-6-4-6 4 1.5-7.4L2 9.8l7.1-.9z"/></svg>
+            </div>
+          </div>
+
+          <div class="champ-row" id="row3">
+            <div class="champ-left">
+              <div class="champ-avatar">YS</div>
+              <div>
+                <div class="champ-name">Yasuo</div>
+                <div class="champ-sub">Sin novedades</div>
+              </div>
+            </div>
+            <div class="stars">
+              <svg class="on" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.9L22 9.8l-5.5 4.8L18 22l-6-4-6 4 1.5-7.4L2 9.8l7.1-.9z"/></svg>
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.9L22 9.8l-5.5 4.8L18 22l-6-4-6 4 1.5-7.4L2 9.8l7.1-.9z"/></svg>
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.9L22 9.8l-5.5 4.8L18 22l-6-4-6 4 1.5-7.4L2 9.8l7.1-.9z"/></svg>
+            </div>
+          </div>
+
+          <div class="widget-status">
+            <span class="status-dot" id="statusDot"></span>
+            <span id="statusText">Esperando la próxima revisión semanal…</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap"><div class="divider"></div></div>
+
+<!-- ==========================================================
+     QUÉ ES MOMO
+========================================================== -->
+<section id="que-es">
+  <div class="wrap about-grid">
+    <div class="reveal">
+      <span class="eyebrow">Qué es Momo</span>
+      <h2 style="margin-top:14px; font-size: clamp(26px,3vw,34px); line-height:1.2;">Un vigía silencioso para tu wishlist de skins.</h2>
+    </div>
+    <div class="about-copy reveal">
+      <p>Momo es una aplicación de escritorio para Windows que <strong>elimina la necesidad de revisar manualmente</strong> la tienda semanal de League of Legends. Eliges tus campeones favoritos una sola vez y Momo se encarga del resto.</p>
+      <p>Cada semana, Momo <strong>revisa la tienda por ti</strong>, compara las ofertas contra tu wishlist y, si encuentra una coincidencia, te lo hace saber de inmediato mediante una notificación nativa de Windows y un correo con el detalle de la oferta.</p>
+      <p>Si no hay nada relevante, Momo <strong>no hace ruido</strong>: no envía nada, no interrumpe y se cierra por completo hasta la próxima revisión.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================
+     CÓMO FUNCIONA
+========================================================== -->
+<section id="como-funciona" style="background: var(--bg-secondary);">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">Cómo funciona</span>
+      <h2>Cuatro pasos. Cero seguimiento manual.</h2>
+      <p>Configúralo una vez y deja que Momo trabaje en segundo plano, semana tras semana.</p>
+    </div>
+
+    <div class="steps">
+      <div class="step reveal">
+        <div class="step-line"></div>
+        <span class="step-num">01</span>
+        <div class="step-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+        </div>
+        <h3>Selecciona tus campeones</h3>
+        <p>Elige una sola vez los campeones que te interesan y asígnales una prioridad.</p>
+      </div>
+
+      <div class="step reveal">
+        <div class="step-line"></div>
+        <span class="step-num">02</span>
+        <div class="step-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        </div>
+        <h3>Momo revisa la tienda</h3>
+        <p>De forma automática, Momo consulta la tienda semanal y la compara con tu wishlist.</p>
+      </div>
+
+      <div class="step reveal">
+        <div class="step-line"></div>
+        <span class="step-num">03</span>
+        <div class="step-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
+        </div>
+        <h3>Te avisa si hay algo</h3>
+        <p>Si encuentra una coincidencia, envía una notificación de Windows y un correo elegante.</p>
+      </div>
+
+      <div class="step reveal">
+        <div class="step-line"></div>
+        <span class="step-num">04</span>
+        <div class="step-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </div>
+        <h3>Se cierra por completo</h3>
+        <p>No queda abierto ni consume recursos. Vuelve a activarse en la próxima revisión.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================
+     CARACTERÍSTICAS
+========================================================== -->
+<section id="caracteristicas">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">Características</span>
+      <h2>Todo lo necesario. Nada de más.</h2>
+      <p>Cada función de Momo existe para que tú no tengas que pensar en la tienda semanal.</p>
+    </div>
+
+    <div class="features-grid">
+
+      <div class="feature-card reveal">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></div>
+        <h4>Revisión automática</h4>
+        <p>Consulta la tienda semanal sin que tengas que abrir nada.</p>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0112 5a5.5 5.5 0 019.5 7c-2.5 4.5-9.5 9-9.5 9z"/></svg></div>
+        <h4>Wishlist de campeones</h4>
+        <p>Define exactamente qué campeones te importan.</p>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 2l2.9 6.9L22 9.8l-5.5 4.8L18 22l-6-4-6 4 1.5-7.4L2 9.8l7.1-.9z"/></svg></div>
+        <h4>Prioridades por estrellas</h4>
+        <p>Marca qué campeones son más importantes para ti.</p>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></div>
+        <h4>Correos HTML elegantes</h4>
+        <p>Recibe el detalle de la oferta en un correo cuidado al detalle.</p>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg></div>
+        <h4>Notificaciones nativas</h4>
+        <p>Avisos directos del sistema, sin apps intermedias.</p>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div>
+        <h4>Splash arts de skins</h4>
+        <p>Visualiza cada oferta con su arte oficial correspondiente.</p>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+        <h4>Historial de ofertas</h4>
+        <p>Consulta qué skins han estado en oferta anteriormente.</p>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 6h7v7"/></svg></div>
+        <h4>Comparación de precios</h4>
+        <p>Observa el ahorro real frente al precio habitual.</p>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v13m0 0l-5-5m5 5l5-5M4 20h16"/></svg></div>
+        <h4>Descarga manual</h4>
+        <p>Fuerza una revisión de la tienda cuando quieras.</p>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 4v5h5M20 20v-5h-5"/><path d="M4 9a8 8 0 0114-5M20 15a8 8 0 01-14 5"/></svg></div>
+        <h4>Detección inteligente</h4>
+        <p>Identifica cambios reales en la tienda sin falsos avisos.</p>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.6V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1-1.6 1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.6-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.6-1 1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.9.3H9a1.7 1.7 0 001-1.6V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.6 1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.9V9a1.7 1.7 0 001.6 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.6 1z"/></svg></div>
+        <h4>Configuración sencilla</h4>
+        <p>Todo listo en un par de minutos, sin curva de aprendizaje.</p>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/><path d="M17 3l3 3-3 3"/></svg></div>
+        <h4>Cambia el correo destino</h4>
+        <p>Actualiza a dónde llegan los avisos desde la propia app.</p>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M18.4 5.6a9 9 0 11-12.8 0M12 3v8"/></svg></div>
+        <h4>Inicio automático</h4>
+        <p>Se activa junto con Windows, sin que tengas que recordarlo.</p>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 6l12 12M18 6L6 18"/></svg></div>
+        <h4>Cierre completo</h4>
+        <p>Termina su proceso por completo tras cada revisión.</p>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg></div>
+        <h4>Bajo consumo</h4>
+        <p>Actividad mínima, solo durante los segundos que dura la revisión.</p>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2v-6M16 6l-4-4-4 4M12 2v14"/></svg></div>
+        <h4>Totalmente gratuito</h4>
+        <p>Sin costos, sin versiones limitadas, sin letra chica.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================
+     CAPTURAS
+========================================================== -->
+<section id="capturas" style="background: var(--bg-secondary);">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">Capturas</span>
+      <h2>Así se ve Momo por dentro.</h2>
+      <p>Espacio reservado para las capturas reales de la aplicación.</p>
+    </div>
+
+    <div class="shots-grid">
+      <div class="shot-frame reveal">
+        <div class="shot-titlebar">
+          <span class="win-title">Momo — Wishlist</span>
+          <div class="win-controls"><span class="win-min"></span><span></span><span class="win-close"></span></div>
+        </div>
+        <div class="shot-placeholder">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          <span>Captura próximamente</span>
+        </div>
+      </div>
+
+      <div class="shot-frame reveal">
+        <div class="shot-titlebar">
+          <span class="win-title">Momo — Historial</span>
+          <div class="win-controls"><span class="win-min"></span><span></span><span class="win-close"></span></div>
+        </div>
+        <div class="shot-placeholder">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          <span>Captura próximamente</span>
+        </div>
+      </div>
+
+      <div class="shot-frame reveal">
+        <div class="shot-titlebar">
+          <span class="win-title">Momo — Notificación</span>
+          <div class="win-controls"><span class="win-min"></span><span></span><span class="win-close"></span></div>
+        </div>
+        <div class="shot-placeholder">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          <span>Captura próximamente</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================
+     FAQ
+========================================================== -->
+<section id="faq">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">Preguntas frecuentes</span>
+      <h2>Lo que probablemente quieras saber.</h2>
+    </div>
+
+    <div class="faq-list reveal">
+
+      <div class="faq-item">
+        <button class="faq-q">
+          ¿Qué pasa si no encuentra ninguna skin?
+          <span class="plus"></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">No hace absolutamente nada. No envía correos ni notificaciones. Permanece completamente en silencio hasta la próxima revisión.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q">
+          ¿Consume recursos?
+          <span class="plus"></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">Solo durante unos segundos, mientras revisa la tienda. Después se cierra completamente.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q">
+          ¿Necesito abrir la aplicación todas las semanas?
+          <span class="plus"></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">No. Puede ejecutarse automáticamente al iniciar Windows, sin que tengas que recordarlo.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q">
+          ¿Necesito tener League of Legends abierto?
+          <span class="plus"></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">No. Momo funciona de forma independiente, aunque el juego esté cerrado.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q">
+          ¿Es segura?
+          <span class="plus"></span>
+        </button>
+        <div class="faq-a"><div class="faq-a-inner">Sí. Solo consulta información pública de la tienda semanal. No modifica League of Legends, no utiliza overlays, no interactúa con Riot Games y no altera archivos del juego.</div></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================
+     DESCARGA
+========================================================== -->
+<section id="descarga" class="download-section">
+  <div class="wrap">
+    <div class="download-card reveal">
+      <span class="eyebrow">Descarga</span>
+      <h2>Configúralo una vez. Olvídate de revisar la tienda.</h2>
+      <p>Momo es gratuito y está diseñado para Windows 10 y 11.</p>
+      <div class="hero-actions">
+        <!-- TODO: reemplazar "#" por el enlace real de descarga -->
+        <a href="Momo_Setup.exe" download class="btn btn-primary btn-lg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v13m0 0l-5-5m5 5l5-5M4 20h16"/></svg>
+          Descargar Momo para Windows
+        </a>
+      </div>
+      <div class="download-note">v1.0 · Windows 10/11 · Gratis</div>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================
+     SOBRE EL CREADOR
+========================================================== -->
+<section style="padding-top:0;">
+  <div class="wrap">
+    <div class="creator-card reveal">
+      <div class="creator-left">
+        <div class="creator-avatar">M</div>
+        <div class="creator-text">
+          <span class="creator-handle">@cricho._</span>
+          <p>Momo fue desarrollado por <strong style="color:var(--text);">@cricho._</strong> como un proyecto personal con el objetivo de no volver a perder una skin en oferta.</p>
+        </div>
+      </div>
+      <a href="https://www.instagram.com/cricho._/" target="_blank" rel="noopener" class="btn btn-ghost">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:16px;height:16px;"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+        Instagram
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================
+     FOOTER
+========================================================== -->
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="#top" class="brand"><span class="brand-mark" aria-hidden="true"></span>Momo</a>
+        <p>Un vigía silencioso para la tienda semanal de League of Legends.</p>
+      </div>
+
+      <div class="footer-links">
+        <div class="footer-col">
+          <h5>Producto</h5>
+          <a href="#como-funciona">Cómo funciona</a>
+          <a href="#caracteristicas">Características</a>
+          <a href="#faq">Preguntas frecuentes</a>
+          <a href="#descarga">Descargar</a>
+        </div>
+        <div class="footer-col">
+          <h5>Creador</h5>
+          <a href="https://www.instagram.com/cricho._/" target="_blank" rel="noopener">@cricho._</a>
+          <a href="https://www.instagram.com/cricho._/" target="_blank" rel="noopener">Instagram</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="wrap" style="padding:0; margin-bottom:28px;">
+      <p class="disclaimer">Momo es una aplicación creada por la comunidad y no está afiliada ni respaldada por Riot Games.</p>
+    </div>
+
+    <div class="footer-bottom">
+      <p>© 2026 Momo. Creado por @cricho._</p>
+      <p>Hecho para la comunidad de League of Legends.</p>
+    </div>
+  </div>
+</footer>
+
+<!-- ==========================================================
+     JAVASCRIPT
+========================================================== -->
+<script>
+(function(){
+  "use strict";
+
+  /* ---- Nav: fondo al hacer scroll ---- */
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', function(){
+    nav.classList.toggle('scrolled', window.scrollY > 12);
+  });
+
+  /* ---- Nav: menú móvil ---- */
+  const navToggle = document.getElementById('navToggle');
+  const navLinks = document.getElementById('navLinks');
+  navToggle.addEventListener('click', function(){
+    const isOpen = navLinks.classList.toggle('open');
+    navToggle.classList.toggle('open', isOpen);
+    navToggle.setAttribute('aria-expanded', isOpen);
+  });
+  navLinks.querySelectorAll('a').forEach(function(link){
+    link.addEventListener('click', function(){
+      navLinks.classList.remove('open');
+      navToggle.classList.remove('open');
+      navToggle.setAttribute('aria-expanded', 'false');
+    });
+  });
+
+  /* ---- Reveal on scroll ---- */
+  const revealEls = document.querySelectorAll('.reveal:not(.is-visible)');
+  const io = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if (entry.isIntersecting){
+        entry.target.classList.add('is-visible');
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  revealEls.forEach(function(el){ io.observe(el); });
+
+  /* ---- FAQ accordion ---- */
+  document.querySelectorAll('.faq-item').forEach(function(item){
+    const q = item.querySelector('.faq-q');
+    const a = item.querySelector('.faq-a');
+    q.addEventListener('click', function(){
+      const isOpen = item.classList.contains('open');
+
+      document.querySelectorAll('.faq-item.open').forEach(function(openItem){
+        if (openItem !== item){
+          openItem.classList.remove('open');
+          openItem.querySelector('.faq-a').style.maxHeight = null;
+        }
+      });
+
+      if (isOpen){
+        item.classList.remove('open');
+        a.style.maxHeight = null;
+      } else {
+        item.classList.add('open');
+        a.style.maxHeight = a.scrollHeight + 'px';
+      }
+    });
+  });
+
+  /* ---- Widget de estado: simula el ciclo silencioso de Momo ----
+     idle -> escaneando -> (silencio | hallazgo) -> idle
+  */
+  const dot = document.getElementById('statusDot');
+  const text = document.getElementById('statusText');
+  const row2 = document.getElementById('row2');
+  const row2sub = document.getElementById('row2sub');
+
+  const cycle = [
+    { dot: '', text: 'Esperando la próxima revisión semanal…', hit:false, delay: 2600 },
+    { dot: 'scanning', text: 'Revisando la tienda semanal…', hit:false, delay: 2200 },
+    { dot: 'found', text: 'Oferta encontrada: Jinx. Enviando aviso…', hit:true, delay: 2400 },
+    { dot: '', text: 'Notificación y correo enviados. Cerrando…', hit:true, delay: 2000 },
+  ];
+  let step = 0;
+
+  function tick(){
+    const state = cycle[step];
+    dot.className = 'status-dot' + (state.dot ? ' ' + state.dot : '');
+    text.textContent = state.text;
+    row2.classList.toggle('hit', state.hit);
+    row2sub.textContent = state.hit ? 'En oferta ahora' : 'Sin novedades';
+
+    step = (step + 1) % cycle.length;
+    setTimeout(tick, state.delay);
+  }
+  setTimeout(tick, 900);
+
+})();
+</script>
+
+</body>
+</html>
